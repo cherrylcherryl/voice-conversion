@@ -57,16 +57,16 @@ def load_knn_vc(device='cpu')-> KNeighborsVC:
 
 if __name__ == "__main__":
 
-    import argparse
+    # import argparse
 
-    def path_list(arg):
-        return arg.split(',')
+    # def path_list(arg):
+    #     return arg.split(',')
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--input", "-i", type=str, help="Input file 16KHz to convert")
-    parser.add_argument("--reference", "-r", type=path_list, help="Reference voice convert to")
-    parser.add_argument("--output", "-o", type=str, help="Output file name")
-    args = parser.parse_args()
+    # parser = argparse.ArgumentParser()
+    # parser.add_argument("--input", "-i", type=str, help="Input file 16KHz to convert")
+    # parser.add_argument("--reference", "-r", type=path_list, help="Reference voice convert to")
+    # parser.add_argument("--output", "-o", type=str, help="Output file name")
+    # args = parser.parse_args()
 
     corpus = []
     with open("sample_data.txt", "r") as f:
@@ -75,7 +75,7 @@ if __name__ == "__main__":
 
     knn_vc = load_knn_vc('cuda' if torch.cuda.is_available() else 'cpu')
     vc = KNNVoiceExpanderVC(knn_vc, 2, corpus)
-    output_wav = vc.convert(args.input, args.reference)
+    output_wav = vc.convert("audio.wav", ["demo.wav"])
 
-    torchaudio.save(args.output, output_wav[None], 16000)
+    torchaudio.save("vc.wav", output_wav[None], 16000)
 

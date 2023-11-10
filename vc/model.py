@@ -24,7 +24,6 @@ class KNNVoiceExpanderVC(nn.Module):
     def forward(self) -> None: 
         pass
 
-    @torch.inference_mode()
     def expand_wave(
             self,
             waves : List[str],
@@ -35,9 +34,10 @@ class KNNVoiceExpanderVC(nn.Module):
             text_sample = self.corpus[rnd]
             wav_syn, sr = synthesis_voice(wave, 16000, text_sample)
             expand_set.append(torch.from_numpy(wav_syn.astype(np.float32)).to(device))
+            if len(expand_set) > self.max_sample:
+                break
         return expand_set
     
-    @torch.inference_mode()
     def convert(
         self,
         src_wave : str,
