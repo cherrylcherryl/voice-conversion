@@ -9,7 +9,7 @@ import torch
 import json
 import torchaudio
 
-from vc.model import KDiffuserVC
+from vc.model import KNNVoiceExpanderVC
 
 wd = Path().parent.absolute()
 hifigan_weight = wd/'weights'/'HifiGAN-prematch.pt'
@@ -68,8 +68,13 @@ if __name__ == "__main__":
     parser.add_argument("--output", "-o", type=str, help="Output file name")
     args = parser.parse_args()
 
-    knn_vc = load_knn_vc()
-    vc = KDiffuserVC(knn_vc=knn_vc)
+    corpus = []
+    with open("sample_data.txt", "r") as f:
+        for line in f:
+            corpus.append(line.strip("\n"))
+
+    knn_vc = load_knn_vc('cuda' if torch.cuda.is_available() else 'cpu')
+    vc = KNNVoiceExpanderVC(knn_vc, 2, corpus)
     output_wav = vc.convert(args.input, args.reference)
 
     torchaudio.save(args.output, output_wav[None], 16000)

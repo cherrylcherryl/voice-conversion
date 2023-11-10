@@ -7,13 +7,16 @@ from voice_cloning.inference import synthesis_voice
 import random
 import numpy as np
 
-class KNNVoiceExpander(nn.Module):
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+
+class KNNVoiceExpanderVC(nn.Module):
     def __init__(
             self,
             knn_vc : KNeighborsVC | Any,
             max_sample: int = 2,
             corpus : List[str] = []
     ) -> None:
+        super(KNNVoiceExpanderVC, self).__init__()
         self.knn_vc = knn_vc
         self.max_sample = max_sample
         self.corpus = corpus
@@ -31,7 +34,7 @@ class KNNVoiceExpander(nn.Module):
             rnd = random.randint(0, len(self.corpus) - 1)
             text_sample = self.corpus[rnd]
             wav_syn, sr = synthesis_voice(wave, 16000, text_sample)
-            expand_set.append(torch.from_numpy(wav_syn.astype(np.float32)))
+            expand_set.append(torch.from_numpy(wav_syn.astype(np.float32)).to(device))
         return expand_set
     
     @torch.inference_mode()
