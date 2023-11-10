@@ -1,47 +1,44 @@
 from pathlib import Path
 import torch
 import torch.nn as nn
-from diffwave.diffuser import diffuser_predict
 from knn_vc.matcher import KNeighborsVC
 from typing import Any, List
-from diffwave.preprocess import transform
+from voice_cloning.inference import synthesis_voice
+import random
+import numpy as np
 
-class KDiffuserVC(nn.Module):
+class KNNVoiceExpander(nn.Module):
     def __init__(
             self,
             knn_vc : KNeighborsVC | Any,
-            sample_per_wave : int = 2,
-            max_samples : int = 10,
+            max_sample: int = 2,
+            corpus : List[str] = []
     ) -> None:
-        super(KDiffuserVC, self).__init__()
         self.knn_vc = knn_vc
-        self.sample_per_wave = sample_per_wave
-        self.max_samples = max_samples
-    
-    def forward(
-            self
-    ) -> None:
+        self.max_sample = max_sample
+        self.corpus = corpus
+
+    def forward(self) -> None: 
         pass
 
     @torch.inference_mode()
     def expand_wave(
             self,
-            waves : List[str | Path | torch.Tensor],
+            waves : List[str],
     ) -> List[torch.Tensor]:
-        preprocessed_waves = [transform(wave) for wave in waves]
         expand_set = []
-        for spec in preprocessed_waves:
-            for _ in range(self.sample_per_wave):
-                expand_set.append(diffuser_predict(spec))
-                if len(expand_set) >= self.max_samples:
-                    return expand_set
+        for wave in waves:
+            rnd = random.randint(0, len(self.corpus) - 1)
+            text_sample = self.corpus[rnd]
+            wav_syn, sr = synthesis_voice(wave, 16000, text_sample)
+            expand_set.append(torch.from_numpy(wav_syn.astype(np.float32)))
         return expand_set
     
     @torch.inference_mode()
     def convert(
         self,
-        src_wave : str | Path | torch.Tensor,
-        ref_wave : List[str | Path | torch.Tensor]
+        src_wave : str,
+        ref_wave : List[str]
     ) -> torch.Tensor:
         expand_set = ref_wave + self.expand_wave(ref_wave)
 
@@ -51,4 +48,3 @@ class KDiffuserVC(nn.Module):
         out_wav = self.knn_vc.match(query_seq, matching_set, topk=4)
 
         return out_wav
-
