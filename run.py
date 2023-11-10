@@ -9,7 +9,7 @@ import torch
 import json
 import torchaudio
 
-from k_diffuser_vc.model import KDiffuserVC
+from vc.model import KDiffuserVC
 
 wd = Path().parent.absolute()
 hifigan_weight = wd/'weights'/'HifiGAN-prematch.pt'
